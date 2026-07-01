@@ -164,10 +164,10 @@ testimonials_data = [
         'avatar': '👨‍🎓'
     },
     {
-        'name': 'Wajahid Shah',
+        'name': 'Wajahat Shah',
         'role': 'Online Mentor',
         'text': "One of the most dedicated young programmers I've mentored. Musa's passion for learning and building projects is truly inspiring. He has a bright future ahead in the field of technology.",
-        'avatar': '👨‍💻'
+        'avatar': '😎'
     }
 ]
 
