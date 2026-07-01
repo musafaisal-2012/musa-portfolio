@@ -1,7 +1,7 @@
 # portfolio_streamlit.py
 # Professional Portfolio with Modern UI - FIXED
 
-import streamlit as st
+
 import datetime
 import time
 
