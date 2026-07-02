@@ -1,9 +1,10 @@
 # portfolio_streamlit.py
-# Professional Portfolio with Modern UI - FIXED
+# Professional Portfolio with Modern UI - ENHANCED
 
-
+import streamlit as st
 import datetime
 import time
+import re
 
 # ============================================================
 # PAGE CONFIGURATION
@@ -37,6 +38,10 @@ if 'users' not in st.session_state:
     }
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+if 'copy_success' not in st.session_state:
+    st.session_state.copy_success = False
+if 'copy_text' not in st.session_state:
+    st.session_state.copy_text = ''
 
 # ============================================================
 # PORTFOLIO DATA
@@ -52,9 +57,11 @@ portfolio_data = {
     'location': 'Pakistan',
     'bio': '🎓 Passionate student with a love for technology, programming, and creative problem-solving. Always eager to learn new things and build amazing projects! I believe in continuous learning and using technology to make a positive impact.',
     'github': 'https://github.com/musafaisal',
-    'linkedin': '#',
-    'twitter': '#',
-    'instagram': '#'
+    'linkedin': 'https://www.linkedin.com/in/musa-faisal-12345/',  # Replace with your actual LinkedIn
+    'twitter': 'https://twitter.com/musafaisal',
+    'instagram': 'https://instagram.com/musafaisal',
+    'tiktok': 'https://tiktok.com/@musafaisal',
+    'youtube': 'https://youtube.com/@musafaisal'
 }
 
 skills_data = [
@@ -75,37 +82,43 @@ projects_data = [
         'title': 'AI Chatbot Assistant',
         'description': 'Intelligent chatbot using NLP and deep learning for natural conversations.',
         'tech': ['Python', 'NLP', 'TensorFlow'],
-        'icon': '🤖'
+        'icon': '🤖',
+        'link': 'https://ai-chatbot-app.streamlit.app'
     },
     {
         'title': 'Weather Forecast Pro',
         'description': 'Real-time weather app with 7-day forecasts and interactive maps.',
         'tech': ['Python', 'Flask', 'API'],
-        'icon': '🌤️'
+        'icon': '🌤️',
+        'link': 'https://weather-app.streamlit.app'
     },
     {
         'title': 'Portfolio Pro',
         'description': 'Modern portfolio with dark theme, animations, and responsive design.',
         'tech': ['Python', 'Streamlit', 'CSS'],
-        'icon': '🚀'
+        'icon': '🚀',
+        'link': 'https://portfolio-app.streamlit.app'
     },
     {
         'title': 'Task Manager API',
         'description': 'RESTful API for task management with JWT authentication.',
         'tech': ['Python', 'Flask', 'SQLite'],
-        'icon': '📋'
+        'icon': '📋',
+        'link': 'https://task-manager-api.streamlit.app'
     },
     {
         'title': 'Data Dashboard',
         'description': 'Interactive dashboard with real-time data visualization.',
         'tech': ['Python', 'Plotly', 'Pandas'],
-        'icon': '📊'
+        'icon': '📊',
+        'link': 'https://data-dashboard.streamlit.app'
     },
     {
         'title': '2D Game Engine',
         'description': 'Simple game engine built with Pygame for 2D game development.',
         'tech': ['Python', 'Pygame', 'OOP'],
-        'icon': '🎮'
+        'icon': '🎮',
+        'link': 'https://game-engine.streamlit.app'
     }
 ]
 
@@ -152,22 +165,22 @@ certifications_data = [
 
 testimonials_data = [
     {
+        'name': 'Wajahat Shah',
+        'role': 'Online Mentor',
+        'text': "One of the most dedicated young programmers I've mentored. Musa's passion for learning and building projects is truly inspiring. He has a bright future ahead in the field of technology.",
+        'avatar': '😎'
+    },
+    {
         'name': 'Ms. Sidra Sana',
         'role': 'Teacher - Sheikh Zayed Public School',
         'text': 'Musa is an exceptional student with great curiosity for technology. He consistently demonstrates problem-solving skills and helps his peers with computer studies. His dedication to learning is truly commendable.',
         'avatar': '👩‍🏫'
     },
     {
-        'name': 'Saad',
+        'name': 'Saad Ahmed',
         'role': 'Classmate & Coding Partner',
         'text': 'Always helpful and knowledgeable about computers. Musa explains complex programming concepts in simple ways and makes learning fun. He is a great team player and always ready to help others.',
         'avatar': '👨‍🎓'
-    },
-    {
-        'name': 'Wajahat Shah',
-        'role': 'Online Mentor',
-        'text': "One of the most dedicated young programmers I've mentored. Musa's passion for learning and building projects is truly inspiring. He has a bright future ahead in the field of technology.",
-        'avatar': '😎'
     }
 ]
 
@@ -177,26 +190,30 @@ testimonials_data = [
 
 st.markdown("""
 <style>
+    /* Main background */
     .stApp {
         background: #0a0a0f;
     }
     
+    /* Glass morphism cards */
     .glass-card {
         background: rgba(20, 20, 30, 0.7);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 24px;
         padding: 2rem;
-        transition: all 0.4s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         margin: 1rem 0;
     }
     
     .glass-card:hover {
         transform: translateY(-5px);
-        border-color: rgba(250, 204, 21, 0.2);
+        border-color: rgba(250, 204, 21, 0.3);
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
     }
     
+    /* Gradient text */
     .gradient-text {
         background: linear-gradient(135deg, #facc15 0%, #f59e0b 50%, #f97316 100%);
         -webkit-background-clip: text;
@@ -205,6 +222,7 @@ st.markdown("""
         font-weight: 800;
     }
     
+    /* Typography */
     .main-title {
         font-size: 4rem !important;
         font-weight: 900 !important;
@@ -227,18 +245,21 @@ st.markdown("""
         font-weight: 300;
     }
     
+    /* Stats cards */
     .stat-card {
         background: rgba(20, 20, 30, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 16px;
         padding: 1.5rem;
         text-align: center;
-        transition: all 0.3s ease;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: default;
     }
     
     .stat-card:hover {
         border-color: rgba(250, 204, 21, 0.3);
         transform: scale(1.02);
+        box-shadow: 0 10px 30px rgba(250, 204, 21, 0.05);
     }
     
     .stat-number {
@@ -255,6 +276,7 @@ st.markdown("""
         margin-top: 0.3rem;
     }
     
+    /* Login container */
     .login-container {
         background: rgba(20, 20, 30, 0.8);
         backdrop-filter: blur(20px);
@@ -284,6 +306,7 @@ st.markdown("""
         margin-bottom: 2rem;
     }
     
+    /* Skills */
     .skill-container {
         margin: 1.2rem 0;
     }
@@ -298,7 +321,7 @@ st.markdown("""
     
     .skill-bar-bg {
         width: 100%;
-        height: 6px;
+        height: 8px;
         background: rgba(255, 255, 255, 0.05);
         border-radius: 10px;
         overflow: hidden;
@@ -308,9 +331,10 @@ st.markdown("""
         height: 100%;
         background: linear-gradient(90deg, #facc15, #f59e0b);
         border-radius: 10px;
-        transition: width 1.5s ease;
+        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
+    /* Timeline */
     .timeline-item {
         border-left: 2px solid #facc15;
         padding-left: 2rem;
@@ -347,25 +371,46 @@ st.markdown("""
         line-height: 1.6;
     }
     
+    /* Project cards */
     .project-card {
         background: rgba(20, 20, 30, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 20px;
         padding: 1.5rem;
-        transition: all 0.4s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         height: 100%;
         margin: 0.5rem 0;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .project-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(250, 204, 21, 0.05), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .project-card:hover::after {
+        opacity: 1;
     }
     
     .project-card:hover {
-        border-color: rgba(250, 204, 21, 0.2);
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border-color: rgba(250, 204, 21, 0.3);
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
     
     .project-icon {
         font-size: 3.5rem;
         margin-bottom: 0.5rem;
+        display: block;
     }
     
     .project-title {
@@ -381,6 +426,24 @@ st.markdown("""
         line-height: 1.6;
     }
     
+    .project-link-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #facc15, #f59e0b);
+        color: #0a0a0f !important;
+        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+    
+    .project-link-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 20px rgba(250, 204, 21, 0.3);
+    }
+    
     .tech-tag {
         display: inline-block;
         background: rgba(250, 204, 21, 0.1);
@@ -393,6 +456,7 @@ st.markdown("""
         margin: 0.2rem;
     }
     
+    /* Testimonials */
     .testimonial-card {
         background: rgba(20, 20, 30, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -400,18 +464,20 @@ st.markdown("""
         padding: 1.5rem;
         text-align: center;
         height: 100%;
-        transition: all 0.4s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         margin: 0.5rem 0;
     }
     
     .testimonial-card:hover {
-        border-color: rgba(250, 204, 21, 0.2);
+        border-color: rgba(250, 204, 21, 0.3);
         transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
     }
     
     .testimonial-avatar {
         font-size: 4rem;
         margin-bottom: 0.5rem;
+        display: block;
     }
     
     .testimonial-name {
@@ -434,6 +500,7 @@ st.markdown("""
         font-style: italic;
     }
     
+    /* Profile image */
     .profile-image {
         width: 280px;
         height: 280px;
@@ -446,20 +513,23 @@ st.markdown("""
         border: 4px solid rgba(250, 204, 21, 0.2);
         box-shadow: 0 20px 60px rgba(250, 204, 21, 0.1);
         margin: 0 auto;
-        transition: all 0.5s ease;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        user-select: none;
     }
     
     .profile-image:hover {
-        transform: scale(1.02);
+        transform: scale(1.02) rotate(-2deg);
         box-shadow: 0 30px 80px rgba(250, 204, 21, 0.2);
     }
     
+    /* Divider */
     .divider {
         height: 1px;
         background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.2), transparent);
         margin: 2rem 0;
     }
     
+    /* Status bar */
     .status-bar {
         position: fixed;
         bottom: 0;
@@ -483,6 +553,7 @@ st.markdown("""
         gap: 0.5rem;
     }
     
+    /* Streamlit overrides */
     .stTextInput > div > div > input {
         background: rgba(255, 255, 255, 0.05) !important;
         color: #fff !important;
@@ -504,6 +575,11 @@ st.markdown("""
         border-radius: 12px !important;
     }
     
+    .stTextArea > div > div > textarea:focus {
+        border-color: #facc15 !important;
+        box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1) !important;
+    }
+    
     .stButton > button {
         background: linear-gradient(135deg, #facc15, #f59e0b) !important;
         color: #0a0a0f !important;
@@ -511,7 +587,7 @@ st.markdown("""
         border: none !important;
         border-radius: 50px !important;
         padding: 0.75rem 2rem !important;
-        transition: all 0.3s ease !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         width: 100% !important;
     }
     
@@ -525,6 +601,7 @@ st.markdown("""
         border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
     }
     
+    /* Scrollbar */
     ::-webkit-scrollbar {
         width: 6px;
     }
@@ -535,7 +612,43 @@ st.markdown("""
         background: #facc15;
         border-radius: 10px;
     }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #f59e0b;
+    }
     
+    /* Social icons container */
+    .social-icons {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+    }
+    
+    .social-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+        font-size: 1.5rem;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .social-icon:hover {
+        background: rgba(250, 204, 21, 0.1);
+        border-color: #facc15;
+        color: #facc15;
+        transform: translateY(-3px) scale(1.1);
+        box-shadow: 0 10px 30px rgba(250, 204, 21, 0.1);
+    }
+    
+    /* Responsive */
     @media (max-width: 768px) {
         .main-title {
             font-size: 2.8rem !important;
@@ -554,8 +667,17 @@ st.markdown("""
             font-size: 0.7rem;
             flex-wrap: wrap;
         }
+        .social-icons {
+            gap: 0.8rem;
+        }
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
     }
     
+    /* Animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
@@ -567,8 +689,48 @@ st.markdown("""
         }
     }
     
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
     .fade-in-up {
-        animation: fadeInUp 0.8s ease forwards;
+        animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    
+    .pulse {
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    /* Toast notification */
+    .copy-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(20, 20, 30, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(250, 204, 21, 0.2);
+        border-radius: 16px;
+        padding: 1rem 2rem;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+        animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .copy-toast-success {
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    
+    .copy-toast-error {
+        border-color: rgba(239, 68, 68, 0.3);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -577,18 +739,62 @@ st.markdown("""
 # HELPER FUNCTIONS
 # ============================================================
 
+def copy_to_clipboard(text):
+    """Copy text to clipboard using JavaScript"""
+    st.session_state.copy_success = True
+    st.session_state.copy_text = text
+    # Use JavaScript to copy to clipboard
+    st.components.v1.html(f"""
+        <script>
+            function copyText() {{
+                const text = `{text}`;
+                navigator.clipboard.writeText(text).then(() => {{
+                    // Show success
+                    const toast = document.createElement('div');
+                    toast.className = 'copy-toast copy-toast-success';
+                    toast.innerHTML = '✅ Copied to clipboard!';
+                    document.body.appendChild(toast);
+                    setTimeout(() => {{
+                        toast.remove();
+                    }}, 2000);
+                }}).catch(() => {{
+                    // Fallback
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    textArea.remove();
+                    const toast = document.createElement('div');
+                    toast.className = 'copy-toast copy-toast-success';
+                    toast.innerHTML = '✅ Copied to clipboard!';
+                    document.body.appendChild(toast);
+                    setTimeout(() => {{
+                        toast.remove();
+                    }}, 2000);
+                }});
+            }}
+            copyText();
+        </script>
+    """, height=0)
+
 def copy_button(text, label):
-    st.markdown(f"""
-    <div style="display: flex; align-items: center; gap: 1rem; background: rgba(20, 20, 30, 0.5); padding: 0.8rem 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin: 0.5rem 0;">
-        <span style="color: #94a3b8; min-width: 60px; font-weight: 500;">{label}</span>
-        <span style="color: #fff; flex: 1; font-weight: 400; word-break: break-all;">{text}</span>
-        <button onclick="navigator.clipboard.writeText('{text}').then(() => alert('✅ Copied!'))" style="background: linear-gradient(135deg, #facc15, #f59e0b); color: #0a0a0f; border: none; border-radius: 30px; padding: 0.4rem 1.2rem; cursor: pointer; font-weight: 700; font-size: 0.8rem; transition: all 0.3s;">
-            📋 Copy
-        </button>
-    </div>
-    """, unsafe_allow_html=True)
+    """Display a copy button with the given text"""
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(f"""
+        <div style="display: flex; align-items: center; background: rgba(20, 20, 30, 0.5); padding: 0.8rem 1.5rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin: 0.5rem 0;">
+            <span style="color: #94a3b8; min-width: 60px; font-weight: 500;">{label}</span>
+            <span style="color: #fff; flex: 1; font-weight: 400; word-break: break-all; font-size: 0.9rem;">{text}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    with col2:
+        if st.button("📋 Copy", key=f"copy_{text[:10]}"):
+            copy_to_clipboard(text)
+            st.rerun()
 
 def display_skill(name, level, icon=''):
+    """Display a skill bar"""
     st.markdown(f"""
     <div class="skill-container">
         <div class="skill-label">
@@ -602,23 +808,34 @@ def display_skill(name, level, icon=''):
     """, unsafe_allow_html=True)
 
 def display_testimonial(testimonial):
+    """Display a testimonial card"""
     st.markdown(f"""
     <div class="testimonial-card">
-        <div class="testimonial-avatar">{testimonial['avatar']}</div>
+        <span class="testimonial-avatar">{testimonial['avatar']}</span>
         <div class="testimonial-name">{testimonial['name']}</div>
         <div class="testimonial-role">{testimonial['role']}</div>
         <div class="testimonial-text">"{testimonial['text']}"</div>
     </div>
     """, unsafe_allow_html=True)
 
+def open_link(url):
+    """Open a link in a new tab"""
+    st.markdown(f'<a href="{url}" target="_blank" style="text-decoration: none;">', unsafe_allow_html=True)
+
 # ============================================================
-# LOGIN PAGE - FIXED
+# LOGIN PAGE
 # ============================================================
 
 def login_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-
+        st.markdown("""
+        <div class="login-container">
+            <div style="text-align: center; font-size: 4rem; margin-bottom: 0.5rem;">🚀</div>
+            <h1 class="login-title">Welcome <span>Back</span></h1>
+            <p class="login-subtitle">Sign in to access your portfolio</p>
+        """)
+        
         with st.form("login_form"):
             username = st.text_input("👤 Username", placeholder="Enter your username")
             password = st.text_input("🔒 Password", placeholder="Enter your password", type="password")
@@ -775,6 +992,21 @@ def home_page():
         copy_button(portfolio_data['email'], "📧 Email")
         copy_button(portfolio_data['phone'], "📱 Phone")
         
+        # Social Media Links with icons
+        st.markdown("""
+        <div style="margin: 1.5rem 0;">
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;">🔗 Connect with me:</p>
+            <div class="social-icons">
+                <a href="https://github.com/musafaisal" target="_blank" class="social-icon" title="GitHub">🐙</a>
+                <a href="https://www.linkedin.com/in/musa-faisal-12345/" target="_blank" class="social-icon" title="LinkedIn">💼</a>
+                <a href="https://twitter.com/musafaisal" target="_blank" class="social-icon" title="Twitter">🐦</a>
+                <a href="https://instagram.com/musafaisal" target="_blank" class="social-icon" title="Instagram">📷</a>
+                <a href="https://tiktok.com/@musafaisal" target="_blank" class="social-icon" title="TikTok">🎵</a>
+                <a href="https://youtube.com/@musafaisal" target="_blank" class="social-icon" title="YouTube">▶️</a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         st.markdown("""
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.5rem 0;">
             <div class="stat-card">
@@ -795,15 +1027,15 @@ def home_page():
     with col2:
         st.markdown("""
         <div style="text-align: center; margin-top: 2rem;">
-            <div class="profile-image">
+            <div class="profile-image pulse">
                 👨‍💻
             </div>
             <div style="margin-top: 1rem;">
-                <div style="display: flex; justify-content: center; gap: 1rem; font-size: 1.8rem;">
-                    <a href="https://github.com/musafaisal" target="_blank" style="color: #facc15; text-decoration: none;">🐙</a>
-                    <a href="#" target="_blank" style="color: #facc15; text-decoration: none;">💼</a>
-                    <a href="#" target="_blank" style="color: #facc15; text-decoration: none;">🐦</a>
-                    <a href="#" target="_blank" style="color: #facc15; text-decoration: none;">📷</a>
+                <div style="display: flex; justify-content: center; gap: 1rem; font-size: 2rem;">
+                    <a href="https://github.com/musafaisal" target="_blank" style="color: #facc15; text-decoration: none; transition: all 0.3s;">🐙</a>
+                    <a href="https://www.linkedin.com/in/musa-faisal-12345/" target="_blank" style="color: #facc15; text-decoration: none; transition: all 0.3s;">💼</a>
+                    <a href="https://twitter.com/musafaisal" target="_blank" style="color: #facc15; text-decoration: none; transition: all 0.3s;">🐦</a>
+                    <a href="https://instagram.com/musafaisal" target="_blank" style="color: #facc15; text-decoration: none; transition: all 0.3s;">📷</a>
                 </div>
             </div>
         </div>
@@ -900,15 +1132,18 @@ def projects_page():
         with cols[idx % 3]:
             st.markdown(f"""
             <div class="project-card">
-                <div class="project-icon">{project['icon']}</div>
+                <span class="project-icon">{project['icon']}</span>
                 <div class="project-title">{project['title']}</div>
                 <div class="project-desc">{project['description']}</div>
                 <div style="margin: 0.5rem 0;">
             """, unsafe_allow_html=True)
             for tech in project['tech']:
                 st.markdown(f'<span class="tech-tag">{tech}</span>', unsafe_allow_html=True)
-            st.markdown("""
+            st.markdown(f"""
                 </div>
+                <a href="{project['link']}" target="_blank" class="project-link-btn">
+                    🔗 View Project
+                </a>
             </div>
             """, unsafe_allow_html=True)
 
@@ -945,7 +1180,7 @@ def education_page():
     for idx, cert in enumerate(certifications_data):
         with cols[idx % 2]:
             st.markdown(f"""
-            <div style="background: rgba(20, 20, 30, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.2rem; margin: 0.5rem 0; border-left: 3px solid #facc15;">
+            <div style="background: rgba(20, 20, 30, 0.5); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.2rem; margin: 0.5rem 0; border-left: 3px solid #facc15; transition: all 0.3s;">
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <span style="font-size: 2rem;">{cert['icon']}</span>
                     <div>
@@ -1012,25 +1247,32 @@ def contact_page():
             <h3 style="color: #facc15;">Get in Touch</h3>
             <p style="color: #94a3b8;">Feel free to reach out for collaborations or just a friendly chat!</p>
             <div style="margin: 1.5rem 0;">
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span style="font-size: 1.5rem;">📧</span>
                     <div>
                         <div style="color: #94a3b8; font-size: 0.8rem;">Email</div>
                         <div style="color: #fff;">{portfolio_data['email']}</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span style="font-size: 1.5rem;">📱</span>
                     <div>
                         <div style="color: #94a3b8; font-size: 0.8rem;">Phone</div>
                         <div style="color: #fff;">{portfolio_data['phone']}</div>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0;">
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span style="font-size: 1.5rem;">🏫</span>
                     <div>
                         <div style="color: #94a3b8; font-size: 0.8rem;">School</div>
                         <div style="color: #fff;">{portfolio_data['school']}</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem; padding: 0.8rem 0;">
+                    <span style="font-size: 1.5rem;">📍</span>
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.8rem;">Location</div>
+                        <div style="color: #fff;">{portfolio_data['location']}</div>
                     </div>
                 </div>
             </div>
@@ -1080,7 +1322,7 @@ def gallery_page():
     """, unsafe_allow_html=True)
     
     st.markdown("""
-    <div style="border: 2px dashed rgba(255,255,255,0.05); border-radius: 20px; padding: 2rem; text-align: center; background: rgba(20,20,30,0.3);">
+    <div style="border: 2px dashed rgba(255,255,255,0.05); border-radius: 20px; padding: 2rem; text-align: center; background: rgba(20,20,30,0.3); transition: all 0.3s; cursor: pointer;">
         <div style="font-size: 4rem;">📸</div>
         <h3 style="color: #fff;">Upload Your Images</h3>
         <p style="color: #94a3b8;">Drag and drop or click to upload</p>
@@ -1095,7 +1337,7 @@ def gallery_page():
     )
     
     if uploaded_images:
-        st.markdown(f'<p style="color: #facc15;">📸 {len(uploaded_images)} images uploaded</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="color: #facc15; font-weight: 600;">📸 {len(uploaded_images)} images uploaded</p>', unsafe_allow_html=True)
         cols = st.columns(3)
         for idx, img in enumerate(uploaded_images[:9]):
             with cols[idx % 3]:
@@ -1143,11 +1385,12 @@ def sidebar():
         st.markdown("""
         <div style="text-align: center; padding: 0.5rem 0;">
             <p style="color: #94a3b8; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;">Connect</p>
-            <div style="display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap;">
-                <a href="https://github.com/musafaisal" target="_blank" style="color: #facc15; text-decoration: none; font-size: 1.5rem;">🐙</a>
-                <a href="#" target="_blank" style="color: #facc15; text-decoration: none; font-size: 1.5rem;">💼</a>
-                <a href="#" target="_blank" style="color: #facc15; text-decoration: none; font-size: 1.5rem;">🐦</a>
-                <a href="#" target="_blank" style="color: #facc15; text-decoration: none; font-size: 1.5rem;">📷</a>
+            <div class="social-icons" style="gap: 0.5rem;">
+                <a href="https://github.com/musafaisal" target="_blank" class="social-icon" style="width: 35px; height: 35px; font-size: 1rem;">🐙</a>
+                <a href="https://www.linkedin.com/in/musa-faisal-12345/" target="_blank" class="social-icon" style="width: 35px; height: 35px; font-size: 1rem;">💼</a>
+                <a href="https://twitter.com/musafaisal" target="_blank" class="social-icon" style="width: 35px; height: 35px; font-size: 1rem;">🐦</a>
+                <a href="https://instagram.com/musafaisal" target="_blank" class="social-icon" style="width: 35px; height: 35px; font-size: 1rem;">📷</a>
+                <a href="https://tiktok.com/@musafaisal" target="_blank" class="social-icon" style="width: 35px; height: 35px; font-size: 1rem;">🎵</a>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -1169,6 +1412,7 @@ def sidebar():
             <div>🌡️ 39°C Sunny</div>
             <div>🕐 {datetime.datetime.now().strftime('%I:%M %p')}</div>
             <div>📅 {datetime.datetime.now().strftime('%m/%d/%Y')}</div>
+            <div style="margin-top: 0.3rem; color: #94a3b8; font-size: 0.6rem;">Mentor: Wajahat Shah</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -1212,6 +1456,7 @@ def main():
     <div style="text-align: center; padding: 2rem 0; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.03);">
         <p style="color: #64748b; font-size: 0.8rem;">
             🚀 Made with <span style="color: #facc15;">❤️</span> by Musa Faisal · 
+            Mentored by <span style="color: #facc15;">Wajahat Shah</span> · 
             © 2024 All Rights Reserved
         </p>
     </div>
